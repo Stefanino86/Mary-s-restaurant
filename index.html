@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Cucina di Casa</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fdf6ec;
+    --warm: #f5e6c8;
+    --orange: #e8632a;
+    --orange-light: #f28c5e;
+    --brown: #3a1f0d;
+    --brown-mid: #7a4928;
+    --green: #4a7c59;
+    --red: #c0392b;
+    --shadow: rgba(58,31,13,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--brown);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--brown);
+    color: var(--cream);
+    text-align: center;
+    padding: 28px 20px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(232,99,42,0.3) 0%, transparent 70%);
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    letter-spacing: 0.03em;
+    position: relative;
+  }
+  header p {
+    font-size: 0.9rem;
+    opacity: 0.65;
+    margin-top: 6px;
+    font-style: italic;
+    position: relative;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--brown);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: transparent;
+    color: rgba(253,246,236,0.55);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+  }
+  .tab-btn.active {
+    color: var(--orange-light);
+    border-bottom-color: var(--orange-light);
+  }
+  .tab-btn:hover:not(.active) { color: var(--cream); }
+
+  /* ── VIEWS ── */
+  .view { display: none; padding: 24px 20px; max-width: 680px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* ── MENU VIEW ── */
+  .menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .menu-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+  }
+  .cart-btn {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 14px rgba(232,99,42,0.35);
+  }
+  .cart-btn:hover { background: #d4541e; transform: translateY(-1px); }
+  .cart-count {
+    background: white;
+    color: var(--orange);
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--brown-mid);
+    opacity: 0.6;
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-style: italic; }
+
+  .dish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .dish-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .dish-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px var(--shadow); }
+
+  .dish-img {
+    width: 100%; height: 180px;
+    object-fit: cover;
+    background: var(--warm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    color: var(--brown-mid);
+  }
+  .dish-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .dish-info { padding: 16px; }
+  .dish-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    margin-bottom: 5px;
+  }
+  .dish-desc {
+    font-size: 0.82rem;
+    color: var(--brown-mid);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    min-height: 36px;
+  }
+  .dish-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .add-btn {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .add-btn:hover { background: #d4541e; }
+  .dish-qty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+  .qty-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--orange);
+    background: white;
+    color: var(--orange);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .qty-btn:hover { background: var(--orange); color: white; }
+  .qty-num { min-width: 20px; text-align: center; }
+
+  .delete-dish {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .delete-dish:hover { color: var(--red); }
+
+  /* ── CART MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--cream);
+    border-radius: 28px 28px 0 0;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px 24px 36px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .close-btn {
+    background: var(--warm);
+    border: none;
+    border-radius: 50%;
+    width: 34px; height: 34px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brown);
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--warm);
+  }
+  .cart-item-img {
+    width: 54px; height: 54px;
+    border-radius: 12px;
+    background: var(--warm);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+  }
+  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-family: 'Playfair Display', serif; font-size: 1rem; }
+  .cart-item-qty { font-size: 0.82rem; color: var(--brown-mid); margin-top: 2px; }
+
+  .cart-note {
+    margin-top: 20px;
+  }
+  .cart-note label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--brown-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .cart-note textarea {
+    width: 100%;
+    border: 2px solid var(--warm);
+    border-radius: 12px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    resize: none;
+    background: white;
+    color: var(--brown);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .cart-note textarea:focus { border-color: var(--orange); }
+
+  .send-btn {
+    width: 100%;
+    margin-top: 20px;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.35);
+  }
+  .send-btn:hover { background: #1fb855; transform: translateY(-1px); }
+  .send-btn:disabled { background: #aaa; box-shadow: none; transform: none; cursor: default; }
+
+  /* ── ADD DISH VIEW ── */
+  #view-add h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 22px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brown-mid);
+    display: block;
+    margin-bottom: 7px;
+  }
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    border: 2px solid var(--warm);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    background: white;
+    color: var(--brown);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus { border-color: var(--orange); }
+  .form-group textarea { resize: none; }
+
+  .photo-upload {
+    border: 2px dashed var(--orange-light);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(232,99,42,0.04);
+    transition: background 0.2s;
+    position: relative;
+  }
+  .photo-upload:hover { background: rgba(232,99,42,0.08); }
+  .photo-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .photo-upload .icon { font-size: 2rem; margin-bottom: 8px; }
+  .photo-upload p { font-size: 0.85rem; color: var(--brown-mid); }
+
+  .photo-preview {
+    width: 100%; max-height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  .save-btn {
+    width: 100%;
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 16px rgba(232,99,42,0.35);
+    margin-top: 8px;
+  }
+  .save-btn:hover { background: #d4541e; transform: translateY(-1px); }
+
+  .success-toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .success-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── SETTINGS VIEW ── */
+  #view-settings h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+  }
+  #view-settings .subtitle {
+    font-size: 0.85rem;
+    color: var(--brown-mid);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .whatsapp-box {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 3px 15px var(--shadow);
+  }
+  .whatsapp-box .wa-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .whatsapp-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .whatsapp-box p {
+    font-size: 0.82rem;
+    color: var(--brown-mid);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .restaurant-name-box {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 3px 15px var(--shadow);
+    margin-bottom: 20px;
+  }
+  .restaurant-name-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="restaurant-title">🍽️ La Cucina di Casa</h1>
+  <p>Il menù della chef di casa</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showView('menu')">🍴 Menù</button>
+  <button class="tab-btn" onclick="showView('add')">➕ Aggiungi</button>
+  <button class="tab-btn" onclick="showView('settings')">⚙️ Impostazioni</button>
+</div>
+
+<!-- MENU VIEW -->
+<div id="view-menu" class="view active">
+  <div class="menu-header">
+    <h2>I Manicaretti</h2>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Ordine <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+  <div id="dish-grid" class="dish-grid"></div>
+  <div id="empty-state" class="empty-state">
+    <div class="icon">👩‍🍳</div>
+    <p>Nessun piatto ancora.<br>Vai su "Aggiungi" per inserire il primo!</p>
+  </div>
+</div>
+
+<!-- ADD VIEW -->
+<div id="view-add" class="view">
+  <h2>Nuovo Piatto</h2>
+  <div class="form-group">
+    <label>Nome del piatto</label>
+    <input type="text" id="dish-name" placeholder="es. Lasagne della nonna">
+  </div>
+  <div class="form-group">
+    <label>Descrizione (opzionale)</label>
+    <textarea id="dish-desc" rows="3" placeholder="es. Con ragù fatto in casa e besciamella cremosa…"></textarea>
+  </div>
+  <div class="form-group">
+    <label>Foto</label>
+    <div class="photo-upload" id="photo-upload-area">
+      <input type="file" accept="image/*" id="photo-input" onchange="handlePhoto(this)">
+      <div class="icon">📷</div>
+      <p>Tocca per aggiungere una foto</p>
+    </div>
+    <img id="photo-preview" class="photo-preview" alt="anteprima">
+  </div>
+  <button class="save-btn" onclick="saveDish()">✓ Salva nel Menù</button>
+</div>
+
+<!-- SETTINGS VIEW -->
+<div id="view-settings" class="view">
+  <h2>Impostazioni</h2>
+  <p class="subtitle">Configura il numero WhatsApp e il nome del ristorante.</p>
+
+  <div class="restaurant-name-box">
+    <h3>🍽️ Nome del Ristorante</h3>
+    <div class="form-group" style="margin-bottom:0">
+      <label>Nome visualizzato</label>
+      <input type="text" id="setting-name" placeholder="La Cucina di Casa" value="">
+      <button class="save-btn" style="margin-top:12px" onclick="saveName()">Salva Nome</button>
+    </div>
+  </div>
+
+  <div class="whatsapp-box">
+    <div class="wa-icon">📱</div>
+    <h3>Numero WhatsApp</h3>
+    <p>Inserisci il numero di tua moglie (con prefisso internazionale, es. <strong>393331234567</strong> per un numero italiano). L'ordine le arriverà come messaggio WhatsApp.</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Numero WhatsApp</label>
+      <input type="tel" id="setting-phone" placeholder="393331234567">
+    </div>
+    <button class="save-btn" onclick="savePhone()">Salva Numero</button>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cart-modal" onclick="closeCartOutside(event)">
+  <div class="modal">
+    <div class="modal-title">
+      Il tuo Ordine
+      <button class="close-btn" onclick="closeCart()">✕</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="cart-note">
+      <label>Note per la chef 💌</label>
+      <textarea id="cart-note" rows="3" placeholder="es. Puoi farmi le lasagne stasera? 😍"></textarea>
+    </div>
+    <button class="send-btn" id="send-wa-btn" onclick="sendWhatsApp()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.135.561 4.14 1.541 5.877L.057 23.926l6.195-1.623A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.808 9.808 0 01-5.001-1.37l-.359-.214-3.728.977.995-3.634-.234-.374A9.808 9.808 0 012.182 12c0-5.422 4.396-9.818 9.818-9.818 5.422 0 9.818 4.396 9.818 9.818 0 5.422-4.396 9.818-9.818 9.818z"/></svg>
+      Manda Ordine su WhatsApp
+    </button>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"></div>
+
+<script>
+  // ── STATE ──
+  let dishes = JSON.parse(localStorage.getItem('dishes') || '[]');
+  let cart = {};
+  let pendingPhotoData = null;
+
+  // ── INIT ──
+  function init() {
+    renderMenu();
+    const saved = localStorage.getItem('wa_phone') || '';
+    document.getElementById('setting-phone').value = saved;
+    const savedName = localStorage.getItem('restaurant_name') || '';
+    document.getElementById('setting-name').value = savedName;
+    if (savedName) {
+      document.getElementById('restaurant-title').textContent = '🍽️ ' + savedName;
+    }
+  }
+
+  // ── VIEWS ──
+  function showView(v) {
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-' + v).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+
+  // ── MENU ──
+  function renderMenu() {
+    const grid = document.getElementById('dish-grid');
+    const empty = document.getElementById('empty-state');
+    grid.innerHTML = '';
+    if (dishes.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    dishes.forEach((dish, i) => {
+      const qty = cart[i] || 0;
+      const card = document.createElement('div');
+      card.className = 'dish-card';
+      card.innerHTML = `
+        <div class="dish-img">
+          ${dish.photo
+            ? `<img src="${dish.photo}" alt="${dish.name}">`
+            : '🍽️'}
+        </div>
+        <div class="dish-info">
+          <div class="dish-name">${dish.name}</div>
+          <div class="dish-desc">${dish.desc || 'Un piatto speciale ✨'}</div>
+          <div class="dish-actions">
+            ${qty === 0
+              ? `<button class="add-btn" onclick="addToCart(${i})">+ Aggiungi</button>`
+              : `<div class="dish-qty">
+                  <button class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
+                  <span class="qty-num">${qty}</span>
+                  <button class="qty-btn" onclick="changeQty(${i}, 1)">+</button>
+                </div>`
+            }
+            <button class="delete-dish" onclick="deleteDish(${i}, event)" title="Rimuovi dal menù">🗑</button>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    updateCartCount();
+  }
+
+  function addToCart(i) {
+    cart[i] = (cart[i] || 0) + 1;
+    renderMenu();
+  }
+  function changeQty(i, delta) {
+    cart[i] = (cart[i] || 0) + delta;
+    if (cart[i] <= 0) delete cart[i];
+    renderMenu();
+  }
+  function deleteDish(i, e) {
+    e.stopPropagation();
+    if (!confirm('Rimuovere "' + dishes[i].name + '" dal menù?')) return;
+    delete cart[i];
+    // shift cart keys
+    const newCart = {};
+    Object.keys(cart).forEach(k => {
+      const ki = parseInt(k);
+      if (ki < i) newCart[ki] = cart[ki];
+      else if (ki > i) newCart[ki - 1] = cart[ki];
+    });
+    cart = newCart;
+    dishes.splice(i, 1);
+    localStorage.setItem('dishes', JSON.stringify(dishes));
+    renderMenu();
+  }
+
+  function updateCartCount() {
+    const total = Object.values(cart).reduce((a, b) => a + b, 0);
+    document.getElementById('cart-count').textContent = total;
+  }
+
+  // ── ADD DISH ──
+  function handlePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingPhotoData = e.target.result;
+      const preview = document.getElementById('photo-preview');
+      preview.src = pendingPhotoData;
+      preview.style.display = 'block';
+      document.getElementById('photo-upload-area').querySelector('p').textContent = '📷 Foto caricata!';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveDish() {
+    const name = document.getElementById('dish-name').value.trim();
+    if (!name) { showToast('⚠️ Inserisci il nome del piatto!'); return; }
+    const desc = document.getElementById('dish-desc').value.trim();
+    dishes.push({ name, desc, photo: pendingPhotoData });
+    localStorage.setItem('dishes', JSON.stringify(dishes));
+    // reset form
+    document.getElementById('dish-name').value = '';
+    document.getElementById('dish-desc').value = '';
+    document.getElementById('photo-input').value = '';
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('photo-upload-area').querySelector('p').textContent = 'Tocca per aggiungere una foto';
+    pendingPhotoData = null;
+    showToast('✓ Piatto aggiunto al menù!');
+    renderMenu();
+  }
+
+  // ── CART ──
+  function openCart() {
+    const items = document.getElementById('cart-items');
+    const keys = Object.keys(cart).filter(k => cart[k] > 0);
+    if (keys.length === 0) {
+      showToast('🛒 Il carrello è vuoto!');
+      return;
+    }
+    items.innerHTML = keys.map(k => {
+      const d = dishes[parseInt(k)];
+      return `<div class="cart-item">
+        <div class="cart-item-img">${d.photo ? `<img src="${d.photo}">` : '🍽️'}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${d.name}</div>
+          <div class="cart-item-qty">x${cart[k]}</div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('cart-modal').classList.add('open');
+  }
+
+  function closeCart() {
+    document.getElementById('cart-modal').classList.remove('open');
+  }
+  function closeCartOutside(e) {
+    if (e.target === document.getElementById('cart-modal')) closeCart();
+  }
+
+  // ── WHATSAPP ──
+  function sendWhatsApp() {
+    const phone = localStorage.getItem('wa_phone') || '';
+    if (!phone) {
+      showToast('⚠️ Imposta il numero WhatsApp nelle impostazioni!');
+      closeCart();
+      return;
+    }
+    const keys = Object.keys(cart).filter(k => cart[k] > 0);
+    const lines = keys.map(k => `• ${dishes[parseInt(k)].name} x${cart[k]}`).join('\n');
+    const note = document.getElementById('cart-note').value.trim();
+    const restaurantName = localStorage.getItem('restaurant_name') || 'La Cucina di Casa';
+    let msg = `🍽️ *${restaurantName}* — Nuovo Ordine!\n\n${lines}`;
+    if (note) msg += `\n\n📝 Note: ${note}`;
+    msg += '\n\n😋 Grazie chef! ❤️';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    cart = {};
+    renderMenu();
+    closeCart();
+    showToast('✓ Ordine inviato su WhatsApp!');
+  }
+
+  // ── SETTINGS ──
+  function savePhone() {
+    const phone = document.getElementById('setting-phone').value.trim().replace(/\D/g,'');
+    localStorage.setItem('wa_phone', phone);
+    showToast('✓ Numero salvato!');
+  }
+  function saveName() {
+    const name = document.getElementById('setting-name').value.trim();
+    if (!name) return;
+    localStorage.setItem('restaurant_name', name);
+    document.getElementById('restaurant-title').textContent = '🍽️ ' + name;
+    showToast('✓ Nome salvato!');
+  }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  init();
+</script>
+</body>
+</html>
